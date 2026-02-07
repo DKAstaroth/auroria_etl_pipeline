@@ -1,0 +1,15 @@
+# Entornos Virtuales
+venv/
+EntornoVirtual/
+env/
+
+# Archivos de Python compilados
+__pycache__/
+*.pyc
+
+# Datos y Logs (No se suben, se generan al correr el código)
+data/*.db
+logs/*.log
+
+# Archivos de sistema
+.DS_Store
