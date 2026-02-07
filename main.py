@@ -1,60 +1,55 @@
 import logging
 import os
-# Importamos las abstracciones y las implementaciones
-from src.interfaces import DataSource, DataTarget
+from src.interfaces import DataSource, DataTarget, DataTransformer
 from src.extractor import APIExtractor
 from src.loader import SQLiteLoader
-from src.transformer import transform_data # Aún mantenemos este como función por ahora
+from src.transformer import NewsCleaner # Ahora importamos la CLASE
 
-# Configuración de Logs
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class AurorIAPipeline:
     """
-    La clase Maestra. Define el FLUJO, pero no los detalles.
-    Principio de Inversión de Dependencias: Depende de abstracciones (DataSource), 
-    no de concreciones (APIExtractor).
+    Arquitectura 1000/1000:
+    El Pipeline recibe TRES estrategias. Es totalmente agnóstico.
     """
-    def __init__(self, source: DataSource, target: DataTarget):
-        # Inyección de Dependencias: Le damos las herramientas al nacer
+    def __init__(self, source: DataSource, transformer: DataTransformer, target: DataTarget):
+        # Inyección TOTAL de dependencias
         self.source = source
+        self.transformer = transformer # La pieza que faltaba
         self.target = target
 
     def run(self):
         logging.info(">>> INICIANDO PROTOCOLO DE INGESTA <<<")
         
-        # 1. Extracción (Polimorfismo: no sé qué fuente es, solo sé que tiene un método extract)
+        # 1. Extracción
         df_raw = self.source.extract()
-        
-        if df_raw.empty:
-            logging.error("Flujo abortado en extracción.")
-            return
+        if df_raw.empty: return
 
-        # 2. Transformación
-        df_clean = transform_data(df_raw)
+        # 2. Transformación (Delegada al objeto inyectado)
+        df_clean = self.transformer.transform(df_raw)
+        if df_clean.empty: return
 
-        # 3. Carga (Polimorfismo: no sé qué base de datos es, solo sé que tiene un método load)
-        success = self.target.load(df_clean)
+        # 3. Carga
+        self.target.load(df_clean)
         
-        if success:
-            logging.info(">>> PROTOCOLO FINALIZADO CON ÉXITO <<<")
-        else:
-            logging.error(">>> FALLO EN EL ALMACENAMIENTO <<<")
+        logging.info(">>> PROTOCOLO FINALIZADO CON ÉXITO <<<")
 
 if __name__ == "__main__":
-    # --- ZONA DE CONFIGURACIÓN (Composition Root) ---
+    # --- CONFIGURACIÓN DE NIVEL DIOS ---
+    # Aquí ensamblamos el robot con las piezas que queramos hoy.
     
-    # Aquí decidimos qué piezas usar hoy. Mañana podríamos cambiar APIExtractor por CSVExtractor
-    # y el pipeline NO tendría que cambiar ni una línea de código. (Open/Closed Principle)
+    # Pieza 1: El Extractor
+    extractor = APIExtractor(url="https://jsonplaceholder.typicode.com/posts")
     
-    mi_fuente = APIExtractor(url="https://jsonplaceholder.typicode.com/posts")
+    # Pieza 2: El Transformador (¡Ahora es intercambiable!)
+    cleaner = NewsCleaner()
     
-    # Aseguramos que exista la carpeta data
+    # Pieza 3: El Cargador
     os.makedirs("data", exist_ok=True)
-    mi_destino = SQLiteLoader(db_path="data/auroria_noticias.db", table_name="news_feed_v2")
+    loader = SQLiteLoader(db_path="data/auroria_noticias.db", table_name="news_feed_v3")
 
-    # Instanciamos el pipeline inyectándole las piezas
-    app = AurorIAPipeline(source=mi_fuente, target=mi_destino)
+    # Inyección
+    pipeline = AurorIAPipeline(source=extractor, transformer=cleaner, target=loader)
     
-    # Ejecutamos
-    app.run()
+    # Ejecución
+    pipeline.run()

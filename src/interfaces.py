@@ -20,3 +20,14 @@ class DataTarget(ABC):
     @abstractmethod
     def load(self, df: pd.DataFrame) -> bool:
         pass
+
+
+# Interfaz: Transformador de Datos
+class DataTransformer(ABC):
+    """
+    Contrato para cualquier clase que quiera manipular/limpiar datos.
+    Recibe DataFrame sucio -> Devuelve DataFrame limpio.
+    """
+    @abstractmethod
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        pass
