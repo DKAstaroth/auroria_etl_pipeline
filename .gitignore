@@ -13,3 +13,8 @@ logs/*.log
 
 # Archivos de sistema
 .DS_Store
+
+
+# Secretos y Configuración Local
+.env
+.env.local
