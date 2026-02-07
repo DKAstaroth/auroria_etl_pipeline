@@ -1,52 +1,60 @@
 import logging
-from src.extractor import extract_data
-from src.transformer import transform_data
-from src.loader import load_data
+import os
+# Importamos las abstracciones y las implementaciones
+from src.interfaces import DataSource, DataTarget
+from src.extractor import APIExtractor
+from src.loader import SQLiteLoader
+from src.transformer import transform_data # Aún mantenemos este como función por ahora
 
-# Configuración global del log para que se guarde en un archivo y también salga por pantalla
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("logs/pipeline.log"), # Yo guardo el historial aquí
-        logging.StreamHandler() # Yo también muestro el log en la terminal
-    ]
-)
+# Configuración de Logs
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def run_pipeline():
+class AurorIAPipeline:
     """
-    Función principal que orquesta todo el flujo ETL.
+    La clase Maestra. Define el FLUJO, pero no los detalles.
+    Principio de Inversión de Dependencias: Depende de abstracciones (DataSource), 
+    no de concreciones (APIExtractor).
     """
-    logging.info("--- INICIANDO PROCESO AUROR-IA ETL ---")
-    
-    # 1. Definir la Fuente (En el futuro será una API de noticias real)
-    URL_FUENTE = "https://jsonplaceholder.typicode.com/posts"
-    
-    # 2. Paso de Extracción
-    logging.info("Paso 1: Iniciando Extracción...")
-    df_raw = extract_data(URL_FUENTE)
-    
-    if df_raw.empty:
-        logging.error("El proceso se detuvo porque la extracción falló.")
-        return
+    def __init__(self, source: DataSource, target: DataTarget):
+        # Inyección de Dependencias: Le damos las herramientas al nacer
+        self.source = source
+        self.target = target
 
-    # 3. Paso de Transformación
-    logging.info("Paso 2: Iniciando Transformación...")
-    df_clean = transform_data(df_raw)
-    
-    if df_clean.empty:
-        logging.error("El proceso se detuvo porque la transformación dejó los datos vacíos.")
-        return
+    def run(self):
+        logging.info(">>> INICIANDO PROTOCOLO DE INGESTA <<<")
+        
+        # 1. Extracción (Polimorfismo: no sé qué fuente es, solo sé que tiene un método extract)
+        df_raw = self.source.extract()
+        
+        if df_raw.empty:
+            logging.error("Flujo abortado en extracción.")
+            return
 
-    # 4. Paso de Carga
-    logging.info("Paso 3: Iniciando Carga a Base de Datos...")
-    # Guardamos en la carpeta data/
-    exito = load_data(df_clean, db_path='data/auroria_noticias.db')
-    
-    if exito:
-        logging.info("--- PROCESO COMPLETADO CON ÉXITO ---")
-    else:
-        logging.error("--- EL PROCESO FALLÓ EN LA ETAPA DE CARGA ---")
+        # 2. Transformación
+        df_clean = transform_data(df_raw)
+
+        # 3. Carga (Polimorfismo: no sé qué base de datos es, solo sé que tiene un método load)
+        success = self.target.load(df_clean)
+        
+        if success:
+            logging.info(">>> PROTOCOLO FINALIZADO CON ÉXITO <<<")
+        else:
+            logging.error(">>> FALLO EN EL ALMACENAMIENTO <<<")
 
 if __name__ == "__main__":
-    run_pipeline()
+    # --- ZONA DE CONFIGURACIÓN (Composition Root) ---
+    
+    # Aquí decidimos qué piezas usar hoy. Mañana podríamos cambiar APIExtractor por CSVExtractor
+    # y el pipeline NO tendría que cambiar ni una línea de código. (Open/Closed Principle)
+    
+    mi_fuente = APIExtractor(url="https://jsonplaceholder.typicode.com/posts")
+    
+    # Aseguramos que exista la carpeta data
+    os.makedirs("data", exist_ok=True)
+    mi_destino = SQLiteLoader(db_path="data/auroria_noticias.db", table_name="news_feed_v2")
+
+    # Instanciamos el pipeline inyectándole las piezas
+    app = AurorIAPipeline(source=mi_fuente, target=mi_destino)
+    
+    # Ejecutamos
+    app.run()
