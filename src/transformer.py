@@ -1,27 +1,29 @@
 import pandas as pd
 import logging
 from datetime import datetime
-from .interfaces import DataTransformer # Importamos el nuevo contrato
+from .interfaces import DataTransformer
 
 class NewsCleaner(DataTransformer):
     """
-    Implementación concreta: Limpieza específica para NOTICIAS.
-    Si mañana limpiamos Cripto, creamos otra clase 'CryptoCleaner'.
+    Componente encargado de limpiar y normalizar los datos.
+    Implementa la interfaz DataTransformer.
     """
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         logger = logging.getLogger(__name__)
         
         if df.empty:
-            logger.warning("Yo recibí un DataFrame vacío. No hay nada que transformar.")
+            logger.warning("Recibí un DataFrame vacío. Nada que transformar.")
             return df
 
         try:
-            logger.info("Yo (NewsCleaner) iniciando limpieza de noticias...")
+            logger.info("Iniciando limpieza de datos...")
             
-            # Lógica de limpieza encapsulada
+            # 1. Crear copia para no afectar memoria original
             df_clean = df.copy()
             
-            # Renombrar columnas
+            # 2. Renombrar columnas (Normalización)
+            # Nota: Al usar la API asíncrona, a veces los campos pueden variar ligeramente
+            # pero asumimos la estructura estándar de JSONPlaceholder
             df_clean = df_clean.rename(columns={
                 'userId': 'user_id',
                 'id': 'external_id',
@@ -29,14 +31,14 @@ class NewsCleaner(DataTransformer):
                 'body': 'content'
             })
 
-            # Eliminar nulos
-            initial_count = len(df_clean)
+            # 3. Eliminar filas vacías
             df_clean = df_clean.dropna(subset=['title', 'content'])
             
-            # Limpiar texto
-            df_clean['content'] = df_clean['content'].str.replace('\n', ' ', regex=False)
+            # 4. Limpieza de texto (Quitar saltos de línea molestos)
+            if 'content' in df_clean.columns:
+                df_clean['content'] = df_clean['content'].astype(str).str.replace('\n', ' ', regex=False)
             
-            # Metadata
+            # 5. Agregar Metadata (Timestamp)
             df_clean['processed_at'] = datetime.now().isoformat()
 
             logger.info(f"Limpieza completada. {len(df_clean)} registros listos.")

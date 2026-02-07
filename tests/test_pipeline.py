@@ -1,47 +1,47 @@
 import pytest
 import pandas as pd
-from main import AurorIAPipeline # Importamos su cerebro orquestador
+from unittest.mock import AsyncMock, MagicMock
+from main import AurorIAPipeline
 
-# Pytest inyecta automáticamente 'mocker' gracias a la librería pytest-mock
-def test_pipeline_flujo_completo(mocker):
+# Marca para decirle a pytest: "Oye, este test es asíncrono, espéralo"
+@pytest.mark.asyncio
+async def test_pipeline_flujo_completo_async(mocker):
     """
-    Prueba que verifica que el Pipeline llame a Extract, Transform y Load en el orden correcto.
-    NO usa internet ni base de datos real.
+    Prueba el flujo ASÍNCRONO completo usando Mocks.
     """
     
-    # --- 1. ARRANGE (Preparar el Escenario) ---
+    # --- 1. ARRANGE (Preparar) ---
     
-    # Creamos un Extractor Falso (Mock)
-    mock_source = mocker.Mock()
-    # Le enseñamos a mentir: "Cuando te llamen, devuelve este DataFrame falso"
+    # Mock del Extractor: Debe ser AsyncMock porque tiene métodos 'async def'
+    mock_source = AsyncMock()
     df_fake_raw = pd.DataFrame([{'id': 1, 'raw_data': 'sucio'}])
+    # Configurar el retorno de la corutina
     mock_source.extract.return_value = df_fake_raw
 
-    # Creamos un Transformador Falso (Mock)
-    mock_transformer = mocker.Mock()
-    # Le enseñamos a mentir: "Devuelve este otro DataFrame limpio"
+    # Mock del Transformer: Este sigue siendo síncrono (MagicMock normal)
+    # Porque transform_data NO es async
+    mock_transformer = MagicMock()
     df_fake_clean = pd.DataFrame([{'id': 1, 'clean_data': 'limpio'}])
     mock_transformer.transform.return_value = df_fake_clean
 
-    # Creamos un Cargador Falso (Mock)
-    mock_target = mocker.Mock()
-    # Le enseñamos a decir: "Todo salió bien (True)"
+    # Mock del Loader: Síncrono también
+    mock_target = MagicMock()
     mock_target.load.return_value = True
 
-    # Inyectamos los actores falsos en el Pipeline Real
-    # Aquí se ve la magia de la Inyección de Dependencias
+    # Inyectamos
     pipeline = AurorIAPipeline(source=mock_source, transformer=mock_transformer, target=mock_target)
 
     # --- 2. ACT (Acción) ---
-    pipeline.run()
+    # Usamos 'await' porque pipeline.run() es asíncrono
+    await pipeline.run()
 
-    # --- 3. ASSERT (Verificación Policial) ---
+    # --- 3. ASSERT (Verificación) ---
     
-    # Verificamos: ¿El Pipeline llamó al extractor?
-    mock_source.extract.assert_called_once()
+    # Verificamos que se haya llamado (y esperado) a la extracción
+    mock_source.extract.assert_awaited_once()
     
-    # Verificamos: ¿El Pipeline llamó al transformador CON los datos que salieron del extractor?
+    # Verificamos la transformación
     mock_transformer.transform.assert_called_once_with(df_fake_raw)
     
-    # Verificamos: ¿El Pipeline llamó al cargador CON los datos que salieron del transformador?
+    # Verificamos la carga
     mock_target.load.assert_called_once_with(df_fake_clean)

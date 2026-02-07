@@ -1,55 +1,46 @@
 import logging
 import os
+import asyncio
 from src.interfaces import DataSource, DataTarget, DataTransformer
-from src.extractor import APIExtractor
+from src.extractor import AsyncAPIExtractor
 from src.loader import SQLiteLoader
-from src.transformer import NewsCleaner # Ahora importamos la CLASE
+from src.transformer import NewsCleaner
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class AurorIAPipeline:
-    """
-    Arquitectura 1000/1000:
-    El Pipeline recibe TRES estrategias. Es totalmente agnóstico.
-    """
     def __init__(self, source: DataSource, transformer: DataTransformer, target: DataTarget):
-        # Inyección TOTAL de dependencias
         self.source = source
-        self.transformer = transformer # La pieza que faltaba
+        self.transformer = transformer
         self.target = target
 
-    def run(self):
-        logging.info(">>> INICIANDO PROTOCOLO DE INGESTA <<<")
+    async def run(self):
+        logging.info(">>> INICIANDO PROTOCOLO ASÍNCRONO <<<")
         
-        # 1. Extracción
-        df_raw = self.source.extract()
+        # await es obligatorio aquí porque extract es asíncrono
+        df_raw = await self.source.extract()
+        
         if df_raw.empty: return
 
-        # 2. Transformación (Delegada al objeto inyectado)
         df_clean = self.transformer.transform(df_raw)
+        
         if df_clean.empty: return
 
-        # 3. Carga
         self.target.load(df_clean)
         
         logging.info(">>> PROTOCOLO FINALIZADO CON ÉXITO <<<")
 
 if __name__ == "__main__":
-    # --- CONFIGURACIÓN DE NIVEL DIOS ---
-    # Aquí ensamblamos el robot con las piezas que queramos hoy.
+    url_base = "https://jsonplaceholder.typicode.com/posts"
     
-    # Pieza 1: El Extractor
-    extractor = APIExtractor(url="https://jsonplaceholder.typicode.com/posts")
-    
-    # Pieza 2: El Transformador (¡Ahora es intercambiable!)
+    # Probamos con 50 peticiones concurrentes
+    extractor = AsyncAPIExtractor(url=url_base, limit=50)
     cleaner = NewsCleaner()
     
-    # Pieza 3: El Cargador
     os.makedirs("data", exist_ok=True)
-    loader = SQLiteLoader(db_path="data/auroria_noticias.db", table_name="news_feed_v3")
+    loader = SQLiteLoader(db_path="data/auroria_noticias.db", table_name="news_feed_async")
 
-    # Inyección
     pipeline = AurorIAPipeline(source=extractor, transformer=cleaner, target=loader)
     
-    # Ejecución
-    pipeline.run()
+    # Punto de entrada al Loop de Eventos
+    asyncio.run(pipeline.run())
