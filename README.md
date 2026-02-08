@@ -1,4 +1,4 @@
-# ⚡ Auror-IA: High-Performance ETL Pipeline
+# Auror-IA: High-Performance ETL Pipeline
 
 ![CI Pipeline](https://github.com/DKAstaroth/auroria_etl_pipeline/actions/workflows/ci.yml/badge.svg)
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)
@@ -14,7 +14,7 @@ Diseñado para ser agnóstico a la fuente de datos, escalable y mantenible bajo 
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El proyecto utiliza el patrón de diseño **Strategy** para desacoplar la lógica de extracción, transformación y carga. El orquestador (`Pipeline`) no conoce los detalles de implementación, solo las interfaces (contratos).
 
@@ -26,9 +26,9 @@ graph LR
     C -- Valid --> D[Transformer Strategy]
     D -->|Clean Data| E[Loader Strategy]
     E -->|Persist| F[(Database / Warehouse)]
+```
 
-
-🚀 Stack Tecnológico
+Stack Tecnológico
 Este proyecto demuestra el dominio del ecosistema moderno de Python (2025):
 
 Core: Python 3.10+ (Type Hinting, Dataclasses).
@@ -56,7 +56,7 @@ GitHub Actions: Pipeline automatizado de pruebas y linting.
 Seguridad: Gestión de secretos mediante variables de entorno (python-dotenv).
 
 
-📂 Estructura del Proyecto
+Estructura del Proyecto
 
 auroria_etl_pipeline/
 ├── .github/workflows/    # CI/CD: Automatización con GitHub Actions
@@ -74,7 +74,7 @@ auroria_etl_pipeline/
 ├── pyproject.toml        # Configuración centralizada (Ruff, MyPy)
 └── requirements.txt      # Dependencias
 
-🛠️ Instalación y Configuración
+Instalación y Configuración
 Sigue estos pasos para levantar el entorno de desarrollo localmente:
 
 1. Clonar el repositorio
@@ -111,7 +111,7 @@ Instala los git hooks para que revisen tu código automáticamente antes de cada
 
 pre-commit install
 
-▶️ Ejecución
+Ejecución
 Para correr el pipeline completo (Extracción Asíncrona -> Validación -> Transformación -> Carga):
 
 python main.py
@@ -123,7 +123,7 @@ Este README.md está diseñado estratégicamente. No es solo documentación; es 
 Cópielo íntegramente y reemplazo el contenido actual de su README.md.
 
 Markdown
-# ⚡ Auror-IA: High-Performance ETL Pipeline
+# Auror-IA: High-Performance ETL Pipeline
 
 ![CI Pipeline](https://github.com/DKAstaroth/auroria_etl_pipeline/actions/workflows/ci.yml/badge.svg)
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)
@@ -139,7 +139,7 @@ Diseñado para ser agnóstico a la fuente de datos, escalable y mantenible bajo 
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El proyecto utiliza el patrón de diseño **Strategy** para desacoplar la lógica de extracción, transformación y carga. El orquestador (`Pipeline`) no conoce los detalles de implementación, solo las interfaces (contratos).
 
@@ -151,7 +151,7 @@ graph LR
     C -- Valid --> D[Transformer Strategy]
     D -->|Clean Data| E[Loader Strategy]
     E -->|Persist| F[(Database / Warehouse)]
-🚀 Stack Tecnológico
+Stack Tecnológico
 Este proyecto demuestra el dominio del ecosistema moderno de Python (2025):
 
 Core: Python 3.10+ (Type Hinting, Dataclasses).
@@ -178,7 +178,7 @@ GitHub Actions: Pipeline automatizado de pruebas y linting.
 
 Seguridad: Gestión de secretos mediante variables de entorno (python-dotenv).
 
-📂 Estructura del Proyecto
+Estructura del Proyecto
 Plaintext
 auroria_etl_pipeline/
 ├── .github/workflows/    # CI/CD: Automatización con GitHub Actions
@@ -195,7 +195,7 @@ auroria_etl_pipeline/
 ├── main.py               # Punto de entrada (Orquestador)
 ├── pyproject.toml        # Configuración centralizada (Ruff, MyPy)
 └── requirements.txt      # Dependencias
-🛠️ Instalación y Configuración
+Instalación y Configuración
 Sigue estos pasos para levantar el entorno de desarrollo localmente:
 
 1. Clonar el repositorio
@@ -229,12 +229,12 @@ Instala los git hooks para que revisen tu código automáticamente antes de cada
 
 Bash
 pre-commit install
-▶️ Ejecución
+Ejecución
 Para correr el pipeline completo (Extracción Asíncrona -> Validación -> Transformación -> Carga):
 
 Bash
 python main.py
-✅ Testing y Calidad
+Testing y Calidad
 Este proyecto no acepta código sin validar. Puedes ejecutar la suite de calidad manualmente:
 
 Ejecutar Tests Unitarios (con Mocks Asíncronos)
@@ -249,7 +249,7 @@ Verificar Tipado Estático
 
 mypy src
 
-👤 Autor
+Autor
 Juan Pablo Andrés Vega Lagos Ingeniero Informatico
 
 Desarrollado con pasión por la excelencia técnica.
