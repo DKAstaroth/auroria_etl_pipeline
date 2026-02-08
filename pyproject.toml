@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# --- Configuración de Ruff (Estilo y Calidad) ---
+[tool.ruff]
+line-length = 88 # Estándar de la industria (Black)
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle (Errores de estilo)
+    "F",  # Pyflakes (Errores lógicos)
+    "I",  # isort (Orden de imports)
+    "B",  # flake8-bugbear (Bugs potenciales)
+    "UP", # pyupgrade (Usar sintaxis moderna)
+]
+ignore = []
+
+# --- Configuración de MyPy (Tipado Estricto) ---
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true # Útil para librerías sin tipos
+check_untyped_defs = true     # Revisa el cuerpo de funciones sin tipos
+disallow_untyped_defs = false # (Opcional) Obliga a poner tipos en todo
